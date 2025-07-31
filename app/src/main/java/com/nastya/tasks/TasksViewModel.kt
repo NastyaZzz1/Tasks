@@ -21,6 +21,10 @@ class TasksViewModel(val dao: TaskDao): ViewModel() {
 
     var newTaskName = ""
 
+    fun onTaskNameChanged(taskName: String){
+        newTaskName = taskName
+    }
+
     val tasks = dao.getAll()
 
     fun addTask() {

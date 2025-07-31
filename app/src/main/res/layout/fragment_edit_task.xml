@@ -1,54 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".EditTaskFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".EditTaskFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <data>
-        <variable
-            name="viewModel"
-            type="com.nastya.tasks.EditTaskViewModel" />
-    </data>
+    <EditText
+        android:id="@+id/task_name_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:hint="@string/name_task"
+        android:inputType="text" />
+
+    <CheckBox
+        android:id="@+id/task_done"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/isDone"
+        android:textSize="16sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal" >
 
-        <EditText
-            android:id="@+id/task_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:inputType="text"
-            android:text="@={viewModel.task.taskName}"/>
-
-        <CheckBox
-            android:id="@+id/task_done"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:checked="@={viewModel.task.taskDone}" />
-
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/update_button"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="38dp"
             android:layout_gravity="center"
-            android:text="Update Task"
-            android:onClick="@{() -> viewModel.updateTask()}" />
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/button_drawble"
+            android:textColor="@color/black"
+            android:state_selected="true"
+            android:text="@string/update_task"
+            app:backgroundTint="@null" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/delete_button"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="38dp"
             android:layout_gravity="center"
-            android:text="Delete Task"
-            android:onClick="@{() -> viewModel.deleteTask()}" />
-
+            android:layout_marginStart="10dp"
+            android:background="@drawable/button_drawble"
+            android:textColor="@color/black"
+            android:state_selected="true"
+            android:text="@string/delete_task"
+            app:backgroundTint="@null" />
     </LinearLayout>
-
-
-</layout>
-
+</LinearLayout>

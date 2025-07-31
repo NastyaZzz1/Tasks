@@ -12,6 +12,13 @@ class EditTaskViewModel(taskId: Long, val dao: TaskDao) : ViewModel() {
     val navigateToList: LiveData<Boolean>
         get() = _navigateToList
 
+    fun onTaskNameChanged(taskNameNew: String){
+        task.value?.taskName = taskNameNew
+    }
+
+    fun onTaskDoneChanged(isCompleted: Boolean){
+        task.value?.taskDone = isCompleted
+    }
 
     fun updateTask() {
         viewModelScope.launch {
