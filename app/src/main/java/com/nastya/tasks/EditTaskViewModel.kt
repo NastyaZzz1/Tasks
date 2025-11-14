@@ -16,14 +16,10 @@ class EditTaskViewModel(taskId: Long, val dao: TaskDao) : ViewModel() {
         task.value?.taskName = taskNameNew
     }
 
-    fun onTaskDoneChanged(isCompleted: Boolean){
+    fun onTaskDoneChanged(isCompleted: Boolean) {
         task.value?.taskDone = isCompleted
-    }
-
-    fun updateTask() {
         viewModelScope.launch {
             dao.update(task.value!!)
-            _navigateToList.value = true
         }
     }
 
@@ -34,7 +30,7 @@ class EditTaskViewModel(taskId: Long, val dao: TaskDao) : ViewModel() {
         }
     }
 
-    fun OnNavigateToList() {
+    fun onNavigateToList() {
         _navigateToList.value = false
     }
 }

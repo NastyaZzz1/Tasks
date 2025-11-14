@@ -41,9 +41,15 @@ class TasksFragment : Fragment() {
 
         this.viewModel = viewModel
 
-        val adapter = TaskItemAdapter { taskId ->
-            viewModel.onTaskClicked(taskId)
-        }
+        val adapter = TaskItemAdapter(
+            onItemClick = { taskId ->
+                viewModel.onTaskClicked(taskId)
+            },
+            onCheckBoxClick = { taskId ->
+                viewModel.setCheckBox(taskId)
+            }
+        )
+
         binding.tasksList.adapter = adapter
 
         viewModel.navigateToTask.observe(viewLifecycleOwner, Observer { taskId ->
@@ -60,17 +66,6 @@ class TasksFragment : Fragment() {
                 adapter.submitList(it)
             }
         })
-
-        binding.taskName.addTextChangedListener { str ->
-            viewModel.onTaskNameChanged((str.takeIf { !it.isNullOrBlank() } ?: "").toString())
-        }
-
-        binding.saveButton.setOnClickListener {
-            viewModel.viewModelScope.launch {
-                viewModel.addTask()
-                Toast.makeText(context, "Task add", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
     override fun onDestroyView() {

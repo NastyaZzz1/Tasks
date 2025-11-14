@@ -11,6 +11,8 @@ class TasksViewModel(val dao: TaskDao): ViewModel() {
     val navigateToTask: LiveData<Long?>
         get() = _navigateToTask
 
+    val tasks = dao.getAll()
+
     fun onTaskClicked(taskId: Long) {
         _navigateToTask.value = taskId
     }
@@ -19,19 +21,11 @@ class TasksViewModel(val dao: TaskDao): ViewModel() {
         _navigateToTask.value = null
     }
 
-    var newTaskName = ""
-
-    fun onTaskNameChanged(taskName: String){
-        newTaskName = taskName
-    }
-
-    val tasks = dao.getAll()
-
-    fun addTask() {
+    fun setCheckBox(bookId: Long) {
         viewModelScope.launch {
-            val task = Task()
-            task.taskName = newTaskName
-            dao.insert(task)
+            val task = dao.getNotLive(bookId)
+            task!!.taskDone = !task.taskDone
+            dao.update(task)
         }
     }
 }

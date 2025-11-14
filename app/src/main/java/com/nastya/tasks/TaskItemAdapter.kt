@@ -6,7 +6,10 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.nastya.tasks.databinding.TaskItemBinding
 
-class TaskItemAdapter(val clickListener: (taskId: Long) -> Unit)
+class TaskItemAdapter(
+    val onItemClick: (taskId: Long) -> Unit,
+    val onCheckBoxClick: (taskId: Long) -> Unit
+)
     : ListAdapter<Task, TaskItemAdapter.TaskItemViewHolder>(TaskDiffItemCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskItemViewHolder {
@@ -15,7 +18,11 @@ class TaskItemAdapter(val clickListener: (taskId: Long) -> Unit)
 
     override fun onBindViewHolder(holder: TaskItemViewHolder, position: Int) {
         val item = getItem(position)
-        holder.bind(item, clickListener)
+        holder.bind(
+            item,
+            onItemClick,
+            onCheckBoxClick
+        )
     }
 
     class TaskItemViewHolder(val binding: TaskItemBinding)
@@ -27,10 +34,21 @@ class TaskItemAdapter(val clickListener: (taskId: Long) -> Unit)
                 return TaskItemViewHolder(binding)
             }
         }
-        fun bind(item: Task, clickListener: (taskId: Long) -> Unit) {
-            binding.task = item
+        fun bind(
+            task: Task,
+            clickListener: (taskId: Long) -> Unit,
+            onCheckBoxClick: (taskId: Long) -> Unit
+        ) {
+            binding.taskName.text = task.taskName
+            binding.taskDone.isChecked = task.taskDone
+
+            binding.taskDone.setOnClickListener {
+                task.taskDone = !task.taskDone
+                binding.taskDone.isChecked = task.taskDone
+                onCheckBoxClick(task.taskId)
+            }
             binding.root.setOnClickListener {
-                clickListener(item.taskId)
+                clickListener(task.taskId)
             }
         }
     }

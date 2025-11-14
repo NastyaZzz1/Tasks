@@ -25,7 +25,6 @@ class EditTaskFragment : Fragment() {
     ): View? {
         _binding = FragmentEditTaskBinding.inflate(inflater, container, false)
         val view = binding.root
-
         return view
     }
 
@@ -38,8 +37,7 @@ class EditTaskFragment : Fragment() {
         val dao = TaskDatabase.getInstance(application).taskDao
 
         val viewModelFactory = EditTaskViewModelFactory(taskId, dao)
-        val viewModel = ViewModelProvider(this, viewModelFactory)
-            .get(EditTaskViewModel::class.java)
+        val viewModel = ViewModelProvider(this, viewModelFactory)[EditTaskViewModel::class.java]
 
         this.viewModel = viewModel
 
@@ -47,13 +45,14 @@ class EditTaskFragment : Fragment() {
             if(navigate) {
                 view.findNavController()
                     .navigate(R.id.action_editTaskFragment_to_tasksFragment)
-                viewModel.OnNavigateToList()
+                viewModel.onNavigateToList()
             }
         })
 
         viewModel.task.observe(viewLifecycleOwner, Observer {
             it?.let {
                 binding.taskNameEdit.setText(it.taskName)
+                binding.taskDone.isChecked = it.taskDone
             }
         })
 
@@ -63,13 +62,6 @@ class EditTaskFragment : Fragment() {
 
         binding.taskDone.setOnCheckedChangeListener { _, isChecked ->
             viewModel.onTaskDoneChanged(isChecked)
-        }
-
-        binding.updateButton.setOnClickListener {
-            viewModel.viewModelScope.launch {
-                viewModel.updateTask()
-                Toast.makeText(context, "Task update", Toast.LENGTH_SHORT).show()
-            }
         }
 
         binding.deleteButton.setOnClickListener {

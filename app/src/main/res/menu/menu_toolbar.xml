@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/addTaskFragment"
+        android:title="add_task"
+        android:icon="@drawable/icon_plus"
+        app:showAsAction="always" />
+</menu>
