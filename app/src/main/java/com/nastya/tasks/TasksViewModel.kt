@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class TasksViewModel(val dao: TaskDao): ViewModel() {
@@ -11,7 +13,11 @@ class TasksViewModel(val dao: TaskDao): ViewModel() {
     val navigateToTask: LiveData<Long?>
         get() = _navigateToTask
 
-    val tasks = dao.getAll()
+    val tasks = dao.getAll().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     fun onTaskClicked(taskId: Long) {
         _navigateToTask.value = taskId
@@ -23,8 +29,8 @@ class TasksViewModel(val dao: TaskDao): ViewModel() {
 
     fun setCheckBox(bookId: Long) {
         viewModelScope.launch {
-            val task = dao.getNotLive(bookId)
-            task!!.taskDone = !task.taskDone
+            val task = dao.get(bookId)
+            task.taskDone = !task.taskDone
             dao.update(task)
         }
     }

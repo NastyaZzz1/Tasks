@@ -1,10 +1,14 @@
 package com.nastya.tasks
 
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.nastya.tasks.databinding.TaskItemBinding
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class TaskItemAdapter(
     val onItemClick: (taskId: Long) -> Unit,
@@ -16,6 +20,7 @@ class TaskItemAdapter(
         return TaskItemViewHolder.inflateFrom(parent)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: TaskItemViewHolder, position: Int) {
         val item = getItem(position)
         holder.bind(
@@ -34,14 +39,17 @@ class TaskItemAdapter(
                 return TaskItemViewHolder(binding)
             }
         }
+        @RequiresApi(Build.VERSION_CODES.O)
         fun bind(
             task: Task,
             clickListener: (taskId: Long) -> Unit,
             onCheckBoxClick: (taskId: Long) -> Unit
         ) {
+            val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault())
+            binding.taskDate.text = task.taskDate?.format(dateFormatter) ?: "—"
+
             binding.taskName.text = task.taskName
             binding.taskDone.isChecked = task.taskDone
-
             binding.taskDone.setOnClickListener {
                 task.taskDone = !task.taskDone
                 binding.taskDone.isChecked = task.taskDone

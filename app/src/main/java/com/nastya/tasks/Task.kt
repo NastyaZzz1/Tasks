@@ -3,6 +3,7 @@ package com.nastya.tasks
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.LocalDate
 
 @Entity(tableName = "task_table")
 data class Task (
@@ -13,5 +14,8 @@ data class Task (
     var taskName: String = "",
 
     @ColumnInfo(name = "task_done")
-    var taskDone: Boolean = false
+    var taskDone: Boolean = false,
+
+    @ColumnInfo(name = "task_date")
+    var taskDate: LocalDate? = null
 )

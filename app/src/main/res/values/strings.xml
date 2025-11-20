@@ -5,5 +5,9 @@
     <string name="update_task">Update</string>
     <string name="delete_task">Delete</string>
     <string name="name_task">Enter a task name</string>
+    <string name="time_task">Enter a task time</string>
     <string name="isDone">Done?</string>
+    <string name="choose_date">Choose the date</string>
+    <string name="title_date">Task completion date</string>
+    <string name="content_description_img_calendar">calendar</string>
 </resources>

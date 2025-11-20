@@ -5,11 +5,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.nastya.tasks.databinding.FragmentTasksBinding
 import kotlinx.coroutines.launch
@@ -61,11 +61,13 @@ class TasksFragment : Fragment() {
             }
         })
 
-        viewModel.tasks.observe(viewLifecycleOwner, Observer {
-            it?.let {
-                adapter.submitList(it)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.tasks.collect { tasks ->
+                    adapter.submitList(tasks)
+                }
             }
-        })
+        }
     }
 
     override fun onDestroyView() {
