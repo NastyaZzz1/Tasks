@@ -3,7 +3,6 @@ package com.nastya.tasks
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Job
@@ -14,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-class EditTaskViewModel(taskId: Long, val dao: TaskDao) : ViewModel() {
+class EditTaskViewModel(taskId: Long, val dao: TaskDao) : BaseTaskViewModel() {
     private var saveJob: Job? = null
 
     private val _navigateToList = MutableLiveData<Boolean>(false)
@@ -30,8 +29,8 @@ class EditTaskViewModel(taskId: Long, val dao: TaskDao) : ViewModel() {
         }
     }
 
-    fun onTaskNameChanged(taskNameNew: String) {
-        _task.value = _task.value?.copy(taskName = taskNameNew)
+    override fun onTaskNameChanged(taskName: String) {
+        _task.value = _task.value?.copy(taskName = taskName)
 
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
@@ -40,13 +39,14 @@ class EditTaskViewModel(taskId: Long, val dao: TaskDao) : ViewModel() {
         }
     }
 
-    fun onTaskDateChanged(taskDateNew: LocalDate){
-        _task.value = _task.value?.copy(taskDate = taskDateNew)
+    override fun onTaskDateChanged(date: LocalDate?) {
+        _task.value = _task.value?.copy(taskDate = date)
         saveTask()
     }
 
-    fun onTaskDoneChanged(isCompleted: Boolean) {
-        _task.value = _task.value?.copy(taskDone = isCompleted)
+
+    override fun onTaskDoneChanged(isDone: Boolean) {
+        _task.value = _task.value?.copy(taskDone = isDone)
         saveTask()
     }
 

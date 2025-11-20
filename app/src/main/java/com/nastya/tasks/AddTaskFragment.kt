@@ -2,8 +2,7 @@ package com.nastya.tasks
 
 import android.os.Build
 import android.os.Bundle
-import android.os.Parcel
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,19 +14,26 @@ import com.nastya.tasks.databinding.FragmentAddTaskBinding
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.MaterialDatePicker
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
 import java.util.Locale
 
-class AddTaskFragment : Fragment() {
+class AddTaskFragment : BaseTaskFragment() {
     private var _binding: FragmentAddTaskBinding? = null
-    private val binding get() = _binding!!
-    private lateinit var viewModel: AddTaskViewModel
+    override val binding get() = _binding!!
+
+    private lateinit var addViewModel: AddTaskViewModel
+    override val fragmentViewModel: BaseTaskViewModel
+        get() = addViewModel
+
+    private val viewModel: AddTaskViewModel
+        get() = addViewModel
+
     @RequiresApi(Build.VERSION_CODES.O)
     val dateFormatter: DateTimeFormatter? = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault())
 
@@ -49,10 +55,8 @@ class AddTaskFragment : Fragment() {
         val dao = TaskDatabase.getInstance(application).taskDao
 
         val viewModelFactory = AddTaskViewModelFactory(dao)
-        val viewModel = ViewModelProvider(
+        addViewModel = ViewModelProvider(
             this, viewModelFactory).get(AddTaskViewModel::class.java)
-
-        this.viewModel = viewModel
 
         lifecycleScope.launch {
             viewModel.navigateToBack.collect { navigate ->
@@ -66,6 +70,16 @@ class AddTaskFragment : Fragment() {
             viewModel.onTaskNameChanged((str.takeIf { !it.isNullOrBlank() } ?: "").toString())
         }
 
+        binding.imgCalendar.setOnClickListener {
+            showMaterialDatePicker(getCurrentSelection()) { selectedDate ->
+                onDateSelected(selectedDate)
+            }
+        }
+
+        setSaveBtnListener()
+    }
+
+    fun setSaveBtnListener() {
         binding.saveButton.setOnClickListener {
             val name = binding.name.text.toString().trim()
 
@@ -79,26 +93,6 @@ class AddTaskFragment : Fragment() {
                 }
             }
         }
-
-        binding.imgCalendar.setOnClickListener {
-            showMaterialDialogPicker()
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun showMaterialDialogPicker() {
-        val constraintsBuilder = setupCalendarConstraints()
-
-        val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setCalendarConstraints(constraintsBuilder.build())
-            .setTitleText("Выберите дату")
-            .build()
-
-        datePicker.addOnPositiveButtonClickListener { selection ->
-            onDateSelected(selection)
-        }
-
-        datePicker.show(childFragmentManager, "MATERIAL_DATE_PICKER")
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -108,29 +102,21 @@ class AddTaskFragment : Fragment() {
             .toLocalDate()
 
         binding.taskDate.text = selectedDate.format(dateFormatter) ?: "Choose the date"
-        viewModel.setTaskDate(selectedDate)
+        viewModel.onTaskDateChanged(selectedDate)
     }
 
-    private fun setupCalendarConstraints(): CalendarConstraints.Builder {
-        val constraintsBuilder = CalendarConstraints.Builder()
-
-        val minDate = Calendar.getInstance()
-         minDate.add(Calendar.DAY_OF_MONTH, -1)
-        val maxDate = Calendar.getInstance()
-        maxDate.add(Calendar.YEAR, 1)
-
-        val validator = object : CalendarConstraints.DateValidator {
-            override fun isValid(date: Long): Boolean {
-                return date >= minDate.timeInMillis && date <= maxDate.timeInMillis
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getCurrentSelection(): Long {
+        val currentText = binding.taskDate.text.toString()
+        if (currentText.isNotEmpty()) {
+            try {
+                val localDate = LocalDate.parse(currentText, dateFormatter)
+                return localDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            } catch (e: Exception) {
+                Log.e("DatePicker", "Ошибка парсинга даты: ${e.message}")
             }
-
-            override fun describeContents(): Int = 0
-            override fun writeToParcel(p0: Parcel, p1: Int) {}
         }
-        constraintsBuilder.setStart(minDate.timeInMillis)
-        constraintsBuilder.setEnd(maxDate.timeInMillis)
-        constraintsBuilder.setValidator(validator)
-        return constraintsBuilder
+        return MaterialDatePicker.todayInUtcMilliseconds()
     }
 
     override fun onDestroyView() {

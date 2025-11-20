@@ -1,8 +1,5 @@
 package com.nastya.tasks
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,7 +7,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-class AddTaskViewModel(val dao: TaskDao): ViewModel() {
+class AddTaskViewModel(val dao: TaskDao): BaseTaskViewModel() {
     private var newTaskName = ""
     private var newTaskDate: LocalDate? = null
 
@@ -21,14 +18,15 @@ class AddTaskViewModel(val dao: TaskDao): ViewModel() {
     )
     val navigateToBack: SharedFlow<Unit> = _navigateToBack
 
-    fun onTaskNameChanged(taskName: String){
+    override fun onTaskNameChanged(taskName: String){
         newTaskName = taskName
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun setTaskDate(taskDate: LocalDate) {
-        newTaskDate = taskDate
+    override fun onTaskDateChanged(date: LocalDate?) {
+        newTaskDate = date
     }
+
+    override fun onTaskDoneChanged(isDone: Boolean) {}
 
     fun addTask() {
         viewModelScope.launch {

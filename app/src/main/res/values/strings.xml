@@ -10,4 +10,5 @@
     <string name="choose_date">Choose the date</string>
     <string name="title_date">Task completion date</string>
     <string name="content_description_img_calendar">calendar</string>
+    <string name="remind">Remind</string>
 </resources>
