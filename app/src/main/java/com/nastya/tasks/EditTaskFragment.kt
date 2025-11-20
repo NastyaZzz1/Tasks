@@ -3,6 +3,7 @@ package com.nastya.tasks
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcel
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -20,7 +21,9 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.nastya.tasks.databinding.FragmentEditTaskBinding
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
@@ -107,6 +110,7 @@ class EditTaskFragment : Fragment() {
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setCalendarConstraints(constraintsBuilder.build())
+            .setSelection(getCurrentSelection())
             .setTitleText("Выберите дату")
             .build()
 
@@ -115,6 +119,20 @@ class EditTaskFragment : Fragment() {
         }
 
         datePicker.show(childFragmentManager, "MATERIAL_DATE_PICKER")
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getCurrentSelection(): Long {
+        val currentText = binding.taskDate.text.toString()
+        if (currentText.isNotEmpty()) {
+            try {
+                val localDate = LocalDate.parse(currentText, dateFormatter)
+                return localDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            } catch (e: Exception) {
+                Log.e("DatePicker", "Ошибка парсинга даты: ${e.message}")
+            }
+        }
+        return MaterialDatePicker.todayInUtcMilliseconds()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

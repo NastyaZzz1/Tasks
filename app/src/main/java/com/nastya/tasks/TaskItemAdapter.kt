@@ -45,6 +45,10 @@ class TaskItemAdapter(
             clickListener: (taskId: Long) -> Unit,
             onCheckBoxClick: (taskId: Long) -> Unit
         ) {
+            val context = binding.root.context
+            val color = task.taskDate.getTaskColor(context)
+            binding.cardView.setCardBackgroundColor(color)
+
             val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault())
             binding.taskDate.text = task.taskDate?.format(dateFormatter) ?: "—"
 

@@ -75,7 +75,7 @@ class AddTaskFragment : Fragment() {
                     binding.name.requestFocus()
                 } else {
                     viewModel.addTask()
-                    Toast.makeText(context, "Книга добавлена", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Задача добавлена", Toast.LENGTH_SHORT).show()
                 }
             }
         }
