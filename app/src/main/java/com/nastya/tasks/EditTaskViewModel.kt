@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalTime
 
 class EditTaskViewModel(taskId: Long, val dao: TaskDao) : BaseTaskViewModel() {
     private var saveJob: Job? = null
@@ -30,12 +31,11 @@ class EditTaskViewModel(taskId: Long, val dao: TaskDao) : BaseTaskViewModel() {
     }
 
     override fun onTaskNameChanged(taskName: String) {
-        _task.value = _task.value?.copy(taskName = taskName)
-
+        val currentTask = _task.value ?: return
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
             delay(500)
-            task.value?.let { dao.update(it) }
+            dao.update(currentTask.copy(taskName = taskName))
         }
     }
 
@@ -63,14 +63,19 @@ class EditTaskViewModel(taskId: Long, val dao: TaskDao) : BaseTaskViewModel() {
         }
     }
 
+    fun updateReminderTime(reminderTime: LocalTime) {
+        _task.value = _task.value?.copy(reminderTime = reminderTime)
+        saveTask()
+    }
+
     fun showDeleteConfirmationDialog(context: Context) {
         val alertDialog = MaterialAlertDialogBuilder(context)
-            .setTitle("Удаление книги")
-            .setMessage("Вы точно хотите удалить книгу?")
-            .setPositiveButton("Да") { _, _ ->
+            .setTitle("Deleting a book")
+            .setMessage("Are you sure you want to delete the book?")
+            .setPositiveButton("Yes") { _, _ ->
                 deleteTask()
             }
-            .setNegativeButton("Отмена", null)
+            .setNegativeButton("Cancel", null)
             .create()
 
         alertDialog.show()

@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.time.LocalDate
+import java.time.LocalTime
 
 @Entity(tableName = "task_table")
 data class Task (
@@ -17,5 +18,8 @@ data class Task (
     var taskDone: Boolean = false,
 
     @ColumnInfo(name = "task_date")
-    var taskDate: LocalDate? = null
+    var taskDate: LocalDate? = null,
+
+    @ColumnInfo(name = "reminder_time")
+    var reminderTime: LocalTime? = null
 )

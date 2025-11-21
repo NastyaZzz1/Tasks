@@ -9,16 +9,26 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <EditText
-        android:id="@+id/task_name_edit"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/task_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:hint="@string/name_task"
-        android:inputType="text"
+        app:hintEnabled="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:hintTextColor="@color/dark_green"
+        app:hintAnimationEnabled="true"
+        app:boxStrokeColor="@color/dark_green">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/task_name_edit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:textSize="16sp"
+            android:hint="@string/name_task"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <CheckBox
         android:id="@+id/task_done"
@@ -27,7 +37,7 @@
         android:text="@string/isDone"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/task_name_edit" />
+        app:layout_constraintTop_toBottomOf="@+id/task_name" />
 
     <TextView
         android:id="@+id/title_date"
@@ -47,8 +57,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/title_date"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/img_calendar"
-        />
+        app:layout_constraintEnd_toStartOf="@+id/img_calendar" />
 
     <ImageView
         android:id="@+id/img_calendar"
@@ -65,7 +74,7 @@
         android:id="@+id/title_remind"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="25dp"
         android:text="@string/remind"
         android:textSize="18dp"
         android:paddingEnd="40dp"
@@ -86,6 +95,22 @@
         app:layout_constraintStart_toEndOf="@+id/title_remind"
         app:layout_constraintTop_toTopOf="@+id/title_remind"
         app:layout_constraintVertical_bias="0.001" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/remind_button"
+        android:layout_width="56dp"
+        android:layout_height="38dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="10dp"
+        android:background="@drawable/button_drawble"
+        android:state_selected="true"
+        android:textColor="@color/black"
+        app:backgroundTint="@null"
+        android:text="+"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/switch_remind"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/switch_remind" />
 
     <TimePicker
         android:id="@+id/timePicker"

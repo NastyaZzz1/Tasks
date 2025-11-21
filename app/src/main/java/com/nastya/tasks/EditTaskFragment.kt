@@ -1,11 +1,20 @@
 package com.nastya.tasks
 
+import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Lifecycle
@@ -14,14 +23,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.nastya.tasks.databinding.FragmentEditTaskBinding
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 class EditTaskFragment : BaseTaskFragment() {
@@ -75,8 +85,10 @@ class EditTaskFragment : BaseTaskFragment() {
             viewModel.onTaskDoneChanged(isChecked)
         }
 
+        val currentText = binding.taskDate.text.toString()
+
         binding.imgCalendar.setOnClickListener {
-            showMaterialDatePicker(getCurrentSelection()) { selectedDate ->
+            showMaterialDatePicker(currentText) { selectedDate ->
                 onDateSelected(selectedDate)
             }
         }
@@ -84,13 +96,40 @@ class EditTaskFragment : BaseTaskFragment() {
         setupObservers()
         setupDeleteButton()
         switchListener()
+        createNotificationChannel()
+
+        binding.remindButton.setOnClickListener {
+            val taskDate: LocalDate? = viewModel.task.value?.taskDate
+            if(taskDate == null) {
+                Toast.makeText(requireContext(), "Set the task date", Toast.LENGTH_LONG).show()
+            } else {
+                if (checkNotificationPermissions(requireContext())) {
+                    scheduleNotification()
+                }
+            }
+        }
+    }
+
+    fun isNotificationScheduled(notificationId: Int): Boolean {
+        val intent = Intent(requireContext(), Notification::class.java)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            requireContext(),
+            notificationId,
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return pendingIntent != null
     }
 
     fun switchListener() {
         binding.switchRemind.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
+                binding.remindButton.visibility = View.VISIBLE
                 binding.timePicker.visibility = View.VISIBLE
             } else {
+                binding.remindButton.visibility = View.GONE
                 binding.timePicker.visibility = View.GONE
             }
         }
@@ -111,24 +150,17 @@ class EditTaskFragment : BaseTaskFragment() {
                         binding.taskNameEdit.setText(it.taskName)
                         binding.taskDone.isChecked = it.taskDone
                         binding.taskDate.text = task.taskDate?.format(dateFormatter) ?: "—"
+
+                        it.reminderTime?.let { reminderTime ->
+                            binding.timePicker.hour = reminderTime.hour
+                            binding.timePicker.minute = reminderTime.minute
+                        }
+
+                        binding.switchRemind.isChecked = isNotificationScheduled(it.taskId.toInt())
                     }
                 }
             }
         }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getCurrentSelection(): Long {
-        val currentText = binding.taskDate.text.toString()
-        if (currentText.isNotEmpty()) {
-            try {
-                val localDate = LocalDate.parse(currentText, dateFormatter)
-                return localDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-            } catch (e: Exception) {
-                Log.e("DatePicker", "Ошибка парсинга даты: ${e.message}")
-            }
-        }
-        return MaterialDatePicker.todayInUtcMilliseconds()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -144,5 +176,101 @@ class EditTaskFragment : BaseTaskFragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel() {
+        val notificationManager = requireContext()
+            .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (notificationManager.getNotificationChannel("task_reminder_channel") == null) {
+            val name = "Notify Channel"
+            val desc = "A Description of the Channel"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(channelID, name, importance)
+            channel.description = desc
+
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("ScheduleExactAlarm")
+    private fun scheduleNotification() {
+        val intent = Intent(requireContext(), Notification::class.java)
+
+        val title = "Complete the task!"
+        val message = viewModel.task.value?.taskName ?: "message"
+
+        intent.putExtra(titleExtra, title)
+        intent.putExtra(messageExtra, message)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            requireContext(),
+            viewModel.task.value!!.taskId.toInt(),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val time = getTime()
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            time,
+            pendingIntent
+        )
+
+        showAlert(time, title, message)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getTime(): Long {
+        val minute = binding.timePicker.minute
+        val hour = binding.timePicker.hour
+        val reminderTime = LocalTime.of(hour, minute)
+        viewModel.updateReminderTime(reminderTime)
+
+        val taskDate: LocalDate? = viewModel.task.value?.taskDate
+
+        val day = taskDate!!.dayOfMonth
+        val month = taskDate.monthValue - 1
+        val year = taskDate.year
+
+        val calendar = Calendar.getInstance()
+        calendar.set(year, month, day, hour, minute)
+
+        return calendar.timeInMillis
+    }
+
+    private fun showAlert(time: Long, title: String, message: String) {
+        val date = Date(time)
+        val dateFormat = android.text.format.DateFormat.getLongDateFormat(requireContext())
+        val timeFormat = android.text.format.DateFormat.getTimeFormat(requireContext())
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Notification Scheduled")
+            .setMessage(
+                "Title: $title\nMessage: $message\nAt: ${dateFormat.format(date)} ${timeFormat.format(date)}"
+            )
+            .setPositiveButton("Okay") { _, _ -> }
+            .show()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun checkNotificationPermissions(context: Context): Boolean {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val isEnabled = notificationManager.areNotificationsEnabled()
+
+        if (!isEnabled) {
+            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            context.startActivity(intent)
+
+            return false
+        }
+        return true
     }
 }

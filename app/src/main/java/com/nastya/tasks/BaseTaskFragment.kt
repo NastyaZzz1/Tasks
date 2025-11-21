@@ -1,13 +1,19 @@
 package com.nastya.tasks
 
+import android.os.Build
 import android.os.Parcel
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.viewbinding.ViewBinding
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Locale
 
 abstract class BaseTaskFragment : Fragment() {
     protected abstract val binding: ViewBinding
@@ -36,16 +42,17 @@ abstract class BaseTaskFragment : Fragment() {
         return constraintsBuilder
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     protected fun showMaterialDatePicker(
-        selection: Long = MaterialDatePicker.todayInUtcMilliseconds(),
+        currentText: String,
         onDateSelected: (Long) -> Unit
     ) {
         val constraintsBuilder = setupCalendarConstraints()
 
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setCalendarConstraints(constraintsBuilder.build())
-            .setSelection(selection)
-            .setTitleText("Выберите дату")
+            .setSelection(getCurrentSelection(currentText))
+            .setTitleText("Select a date")
             .build()
 
         datePicker.addOnPositiveButtonClickListener { selection ->
@@ -53,6 +60,20 @@ abstract class BaseTaskFragment : Fragment() {
         }
 
         datePicker.show(childFragmentManager, "MATERIAL_DATE_PICKER")
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getCurrentSelection(currentText: String): Long {
+        val dateFormatter: DateTimeFormatter? = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault())
+        if (currentText.isNotEmpty()) {
+            try {
+                val localDate = LocalDate.parse(currentText, dateFormatter)
+                return localDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            } catch (e: Exception) {
+                Log.e("DatePicker", "Ошибка парсинга даты: ${e.message}")
+            }
+        }
+        return MaterialDatePicker.todayInUtcMilliseconds()
     }
 }
 

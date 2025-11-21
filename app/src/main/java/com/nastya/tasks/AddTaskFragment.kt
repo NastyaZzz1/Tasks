@@ -2,7 +2,6 @@ package com.nastya.tasks
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,12 +13,9 @@ import com.nastya.tasks.databinding.FragmentAddTaskBinding
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.datepicker.MaterialDatePicker
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -70,8 +66,10 @@ class AddTaskFragment : BaseTaskFragment() {
             viewModel.onTaskNameChanged((str.takeIf { !it.isNullOrBlank() } ?: "").toString())
         }
 
+        val currentTextDate = binding.taskDate.text.toString()
+
         binding.imgCalendar.setOnClickListener {
-            showMaterialDatePicker(getCurrentSelection()) { selectedDate ->
+            showMaterialDatePicker(currentTextDate) { selectedDate ->
                 onDateSelected(selectedDate)
             }
         }
@@ -85,11 +83,11 @@ class AddTaskFragment : BaseTaskFragment() {
 
             viewModel.viewModelScope.launch {
                 if (name.isEmpty()) {
-                    binding.name.error = "Введите название"
+                    binding.name.error = "Enter the name"
                     binding.name.requestFocus()
                 } else {
                     viewModel.addTask()
-                    Toast.makeText(context, "Задача добавлена", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Task added", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -103,20 +101,6 @@ class AddTaskFragment : BaseTaskFragment() {
 
         binding.taskDate.text = selectedDate.format(dateFormatter) ?: "Choose the date"
         viewModel.onTaskDateChanged(selectedDate)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getCurrentSelection(): Long {
-        val currentText = binding.taskDate.text.toString()
-        if (currentText.isNotEmpty()) {
-            try {
-                val localDate = LocalDate.parse(currentText, dateFormatter)
-                return localDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-            } catch (e: Exception) {
-                Log.e("DatePicker", "Ошибка парсинга даты: ${e.message}")
-            }
-        }
-        return MaterialDatePicker.todayInUtcMilliseconds()
     }
 
     override fun onDestroyView() {
